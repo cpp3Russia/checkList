@@ -1,0 +1,43 @@
+@use './functions' as *;
+@use './variables' as *;
+@use './mixins' as *;
+@use './animations' as *;
+
+*,
+*::before,
+*::after {
+  font-family: inherit;
+  box-sizing: border-box;
+  background-position: center;
+  background-size: 100% auto;
+  background-repeat: no-repeat;
+  -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
+}
+
+html {
+  font-size: 10px;
+  cursor: pointer;
+}
+
+body {
+  width: 100%;
+  height: 100vh;
+  user-select: none;
+  -webkit-user-select: none;
+  overflow: auto;
+  color: $color-on-background;
+  background-color: $color-background;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-size-adjust: 100% !important;
+  -webkit-text-size-adjust: 100% !important;
+  -moz-text-size-adjust: 100% !important;
+}
+
+
+html,
+body,
+#root {
+  width: 100vw;
+  min-height: 100vh;
+}

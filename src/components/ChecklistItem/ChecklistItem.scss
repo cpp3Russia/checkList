@@ -1,0 +1,50 @@
+@use '@/assets/styles/variables' as *;
+@use '@/assets/styles/mixins' as *;
+@use '@/assets/styles/animations' as *;
+
+.item {
+  animation: taskSlideIn 0.3s ease-out;
+  border-radius: 12px !important;
+  border: 1px solid $color-outline-variant !important;
+  background-color: $color-surface-container-lowest !important;
+  transition: $transition-base !important;
+  box-shadow: none !important;
+
+  &.done {
+    animation: none;
+    background-color: $color-surface-container-low !important;
+    border-color: transparent !important;
+
+    .MuiCardContent-root {
+      opacity: 0.6;
+    }
+    
+    .MuiTypography-root {
+      text-decoration: line-through;
+      color: $color-on-surface-variant !important;
+    }
+  }
+
+  &:hover {
+    border-color: $color-primary !important;
+    background-color: $color-surface-container-low !important;
+    transform: translateY(-2px);
+  }
+
+  .MuiCardContent-root {
+    padding: 20px !important;
+  }
+
+  .MuiCheckbox-root {
+    color: $color-outline !important;
+    &.Mui-checked {
+      color: $color-primary !important;
+    }
+  }
+
+  .MuiChip-root {
+    border-radius: 6px !important;
+    font-weight: 500 !important;
+  }
+}
+
