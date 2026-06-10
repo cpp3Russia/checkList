@@ -20,7 +20,7 @@ interface PriorityDistributionChartProps {
 
 export function PriorityDistributionChart({
   items,
-  title = 'Priority distribution',
+  title = '优先级分布',
   height = 300
 }: PriorityDistributionChartProps) {
   const chartData = useMemo(() => {
@@ -31,9 +31,9 @@ export function PriorityDistributionChart({
     })
 
     return [
-      { priority: 'High', count: counts.high, fill: '#f44336' },
-      { priority: 'Medium', count: counts.medium, fill: '#ff9800' },
-      { priority: 'Low', count: counts.low, fill: '#4caf50' }
+      { priority: '高', count: counts.high, fill: '#f44336' },
+      { priority: '中', count: counts.medium, fill: '#ff9800' },
+      { priority: '低', count: counts.low, fill: '#4caf50' }
     ]
   }, [items])
 
@@ -45,8 +45,8 @@ export function PriorityDistributionChart({
         </Typography>
 
         {items.length === 0 ? (
-          <Box sx={{ height, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <Typography color="text.secondary">No data</Typography>
+          <Box className="priority-distribution-chart__empty" sx={{ height, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <Typography color="text.secondary">暂无数据</Typography>
           </Box>
         ) : (
           <ResponsiveContainer width="100%" height={height}>
@@ -56,7 +56,7 @@ export function PriorityDistributionChart({
               <YAxis />
               <Tooltip />
               <Legend />
-              <Bar dataKey="count" fill="#667eea" name="Tasks" />
+              <Bar dataKey="count" fill="#667eea" name="任务数" />
             </BarChart>
           </ResponsiveContainer>
         )}

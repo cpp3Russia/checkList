@@ -50,7 +50,8 @@ export function useForgetCurve(itemId?: string) {
   }
 
   const getReviewInfo = (id: string) => {
-    const schedule = forgetCurveStore.getSchedule(id)
+    const item = checklistStore.items.find((entry) => entry.id === id)
+    const schedule = item?.forgetCurveData ?? forgetCurveStore.getSchedule(id)
     if (!schedule) return null
 
     return {

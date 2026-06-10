@@ -1,16 +1,14 @@
 import { useMemo } from 'react'
 import { Box, Card, CardContent, Typography } from '@mui/material'
 import {
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
   CartesianGrid,
-  Tooltip,
   Legend,
+  Line,
+  LineChart,
   ResponsiveContainer,
-  Area,
-  AreaChart
+  Tooltip,
+  XAxis,
+  YAxis
 } from 'recharts'
 import type { StatisticsData } from '@/types'
 import { formatDate } from '@/utils/dateUtils'
@@ -26,14 +24,16 @@ export function CompletionTrendChart({
   title = '完成趋势',
   height = 300
 }: CompletionTrendChartProps) {
-  const chartData = useMemo(() => {
-    return data.map(item => ({
-      date: formatDate(item.date, 'MM-DD'),
-      completed: item.completedCount,
-      total: item.totalCount,
-      rate: Math.round(item.completionRate * 100)
-    }))
-  }, [data])
+  const chartData = useMemo(
+    () =>
+      data.map((item) => ({
+        date: formatDate(item.date, 'MM-DD'),
+        completed: item.completedCount,
+        total: item.totalCount,
+        rate: Math.round(item.completionRate * 100)
+      })),
+    [data]
+  )
 
   return (
     <Card>
@@ -43,20 +43,20 @@ export function CompletionTrendChart({
         </Typography>
 
         {chartData.length === 0 ? (
-          <Box sx={{ height, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <Typography color="text.secondary">
-              暂无数据
-            </Typography>
+          <Box className="completion-trend-chart__empty" sx={{ height, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <Typography color="text.secondary">暂无数据</Typography>
           </Box>
         ) : (
           <ResponsiveContainer width="100%" height={height}>
             <LineChart data={chartData}>
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis dataKey="date" />
-              <YAxis />
+              <YAxis yAxisId="count" />
+              <YAxis yAxisId="rate" orientation="right" domain={[0, 100]} />
               <Tooltip />
               <Legend />
               <Line
+                yAxisId="count"
                 type="monotone"
                 dataKey="completed"
                 stroke="#667eea"
@@ -64,6 +64,7 @@ export function CompletionTrendChart({
                 name="已完成"
               />
               <Line
+                yAxisId="count"
                 type="monotone"
                 dataKey="total"
                 stroke="#764ba2"
@@ -71,12 +72,12 @@ export function CompletionTrendChart({
                 name="总数"
               />
               <Line
+                yAxisId="rate"
                 type="monotone"
                 dataKey="rate"
                 stroke="#4caf50"
                 dot={{ fill: '#4caf50' }}
-                yAxisId="right"
-                name="完成率(%)"
+                name="完成率 (%)"
               />
             </LineChart>
           </ResponsiveContainer>

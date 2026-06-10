@@ -56,16 +56,44 @@ export function isSameDay(date1: Date, date2: Date): boolean {
   )
 }
 
+export function normalizeToDayStart(date: Date): Date {
+  const normalized = new Date(date)
+  normalized.setHours(0, 0, 0, 0)
+  return normalized
+}
+
+export function addDays(date: Date, days: number): Date {
+  const result = new Date(date)
+  result.setDate(result.getDate() + days)
+  return result
+}
+
 export function getRelativeDateText(date: Date): string {
   const today = getTodayDate()
   const yesterday = addDays(today, -1)
   const tomorrow = addDays(today, 1)
+  const dayAfterTomorrow = addDays(today, 2)
 
-  if (isSameDay(date, today)) return 'Today'
-  if (isSameDay(date, yesterday)) return 'Yesterday'
-  if (isSameDay(date, tomorrow)) return 'Tomorrow'
+  if (isSameDay(date, today)) return '今天'
+  if (isSameDay(date, yesterday)) return '昨天'
+  if (isSameDay(date, tomorrow)) return '明天'
+  if (isSameDay(date, dayAfterTomorrow)) return '后天'
 
   return formatDate(date, 'MM-DD')
+}
+
+export function getTaskSummaryDateLabel(date: Date): string {
+  const today = getTodayDate()
+  const yesterday = addDays(today, -1)
+  const tomorrow = addDays(today, 1)
+  const dayAfterTomorrow = addDays(today, 2)
+
+  if (isSameDay(date, today)) return '今日'
+  if (isSameDay(date, tomorrow)) return '明天'
+  if (isSameDay(date, dayAfterTomorrow)) return '后天'
+  if (isSameDay(date, yesterday)) return '昨日'
+
+  return formatDate(date, 'YYYY年M月D日')
 }
 
 export function formatDate(date: Date, format = 'YYYY-MM-DD HH:mm'): string {
@@ -85,12 +113,6 @@ export function getDaysDiff(date1: Date, date2: Date): number {
   return Math.floor((d2.getTime() - d1.getTime()) / (1000 * 60 * 60 * 24))
 }
 
-export function addDays(date: Date, days: number): Date {
-  const result = new Date(date)
-  result.setDate(result.getDate() + days)
-  return result
-}
-
 export function formatDuration(durationMs: number): string {
   const totalSeconds = Math.max(0, Math.floor(durationMs / 1000))
   const hours = Math.floor(totalSeconds / 3600)
@@ -104,8 +126,8 @@ export function formatDuration(durationMs: number): string {
 
 export function getWeekDayName(date: Date, format: 'short' | 'long' = 'short'): string {
   const names = {
-    short: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'],
-    long: ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
+    short: ['日', '一', '二', '三', '四', '五', '六'],
+    long: ['星期日', '星期一', '星期二', '星期三', '星期四', '星期五', '星期六']
   }
 
   return names[format][date.getDay()]

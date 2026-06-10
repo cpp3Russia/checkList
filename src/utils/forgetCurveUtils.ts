@@ -1,4 +1,5 @@
 import type { ForgetCurveSchedule } from '@/types'
+import { normalizeToDayStart } from '@/utils/dateUtils'
 
 export const FORGET_CURVE_INTERVALS = [0, 1, 3, 7, 15, 30]
 
@@ -21,6 +22,10 @@ export function calculateNextReviewDate(
     lastReviewDate,
     reviewCount: currentLevel + 1
   }
+}
+
+export function createInitialReviewSchedule(baseDate: Date = new Date()): ForgetCurveSchedule {
+  return calculateNextReviewDate(0, normalizeToDayStart(baseDate))
 }
 
 export function calculateEaseFactor(quality: number, easeFactor: number): number {
@@ -71,7 +76,7 @@ export function generateReviewPlan(
   if (!isInForgetCurve) return []
 
   const plan: ForgetCurveSchedule[] = []
-  let currentDate = new Date(createdDate)
+  let currentDate = normalizeToDayStart(createdDate)
 
   for (let level = 0; level < FORGET_CURVE_INTERVALS.length - 1; level++) {
     const schedule = calculateNextReviewDate(level, currentDate)

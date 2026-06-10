@@ -27,11 +27,11 @@ interface DateSelectorProps {
 }
 
 const quickOptions = [
-  { label: 'Today', offset: 0 },
-  { label: 'Tomorrow', offset: 1 },
-  { label: 'In 2 days', offset: 2 },
-  { label: 'In 1 week', offset: 7 },
-  { label: 'In 30 days', offset: 30 }
+  { label: '今天', offset: 0 },
+  { label: '明天', offset: 1 },
+  { label: '两天后', offset: 2 },
+  { label: '一周后', offset: 7 },
+  { label: '三十天后', offset: 30 }
 ]
 
 function buildCalendarDays(month: Date) {
@@ -39,8 +39,8 @@ function buildCalendarDays(month: Date) {
   const daysInMonth = new Date(month.getFullYear(), month.getMonth() + 1, 0).getDate()
   const cells: Array<number | null> = []
 
-  for (let i = 0; i < firstDay; i++) cells.push(null)
-  for (let day = 1; day <= daysInMonth; day++) cells.push(day)
+  for (let i = 0; i < firstDay; i += 1) cells.push(null)
+  for (let day = 1; day <= daysInMonth; day += 1) cells.push(day)
 
   return cells
 }
@@ -61,7 +61,7 @@ export function DateSelector({ date, onDateChange }: DateSelectorProps) {
       <Box className="date-head">
         <ButtonGroup variant="outlined" size="small">
           <Button onClick={() => onDateChange(addDays(date, -1))} className="btn-nav" startIcon={<KeyboardArrowLeft />}>
-            Prev
+            前一天
           </Button>
           <Button
             onClick={() => onDateChange(getTodayDate())}
@@ -78,13 +78,13 @@ export function DateSelector({ date, onDateChange }: DateSelectorProps) {
             </Box>
           </Button>
           <Button onClick={() => onDateChange(addDays(date, 1))} className="btn-nav" endIcon={<KeyboardArrowRight />}>
-            Next
+            后一天
           </Button>
         </ButtonGroup>
 
         <Box className="date-acts">
-          <Button size="small" variant="text" onClick={() => setShowQuickOptions((value) => !value)}>
-            Quick pick
+          <Button size="small" variant="text" onClick={() => setShowQuickOptions((value) => !value)} sx={{fontSize: 14}}>
+            快速选择
           </Button>
           <Button
             size="small"
@@ -94,8 +94,9 @@ export function DateSelector({ date, onDateChange }: DateSelectorProps) {
               setCalendarMonth(new Date(date))
               setCalendarOpen(true)
             }}
+            sx={{fontSize: 14}}
           >
-            Calendar
+            日历
           </Button>
         </Box>
       </Box>
@@ -119,7 +120,7 @@ export function DateSelector({ date, onDateChange }: DateSelectorProps) {
       )}
 
       <Dialog open={calendarOpen} onClose={() => setCalendarOpen(false)} maxWidth="sm" fullWidth>
-        <DialogTitle>Select date</DialogTitle>
+        <DialogTitle>选择日期</DialogTitle>
         <DialogContent>
           <Box className="cal-cnt">
             <Box className="cal-head">
@@ -143,7 +144,7 @@ export function DateSelector({ date, onDateChange }: DateSelectorProps) {
             </Box>
 
             <Box className="cal-wks">
-              {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day) => (
+              {['日', '一', '二', '三', '四', '五', '六'].map((day) => (
                 <Box key={day} className="wk-lbl">
                   {day}
                 </Box>
@@ -173,7 +174,7 @@ export function DateSelector({ date, onDateChange }: DateSelectorProps) {
           </Box>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setCalendarOpen(false)}>Close</Button>
+          <Button onClick={() => setCalendarOpen(false)}>关闭</Button>
         </DialogActions>
       </Dialog>
     </Paper>

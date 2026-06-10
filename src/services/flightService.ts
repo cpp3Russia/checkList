@@ -56,10 +56,16 @@ export async function fetchLiveFlights(): Promise<LiveFlight[]> {
     lamin: String(DEFAULT_BOUNDS.lamin),
     lomin: String(DEFAULT_BOUNDS.lomin),
     lamax: String(DEFAULT_BOUNDS.lamax),
-    lomax: String(DEFAULT_BOUNDS.lomax)
+    lomax: String(DEFAULT_BOUNDS.lomax),
+    t: String(Date.now())
   })
 
-  const response = await fetch(`${getBaseUrl()}/states/all?${search.toString()}`)
+  const response = await fetch(`${getBaseUrl()}/states/all?${search.toString()}`, {
+    cache: 'no-store',
+    headers: {
+      'Cache-Control': 'no-cache'
+    }
+  })
 
   if (!response.ok) {
     throw new Error(`Flight API request failed with ${response.status}`)

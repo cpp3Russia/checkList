@@ -45,6 +45,160 @@
   .MuiChip-root {
     border-radius: 6px !important;
     font-weight: 500 !important;
+    font-size: 12px !important;
+  }
+
+  .checklist-item__review-chip {
+    background: linear-gradient(135deg, rgba(26, 99, 217, 0.12), rgba(58, 152, 255, 0.2)) !important;
+    border: 1px solid rgba(26, 99, 217, 0.22) !important;
+    color: $color-primary !important;
+    font-weight: 700 !important;
+  }
+
+  &.dragging {
+    opacity: 0.72;
+    transform: rotate(1deg);
+    box-shadow: 0 16px 36px rgba(33, 62, 120, 0.16) !important;
+  }
+
+  &.is-current-active {
+    position: relative;
+    border-color: rgba(26, 99, 217, 0.55) !important;
+    background:
+      linear-gradient(135deg, rgba(26, 99, 217, 0.06), rgba(255, 255, 255, 0.96) 42%),
+      $color-surface-container-lowest !important;
+    box-shadow:
+      0 14px 34px rgba(26, 99, 217, 0.14),
+      0 0 0 1px rgba(26, 99, 217, 0.08) !important;
+
+    &::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: inherit;
+      padding: 1px;
+      background: linear-gradient(135deg, rgba(26, 99, 217, 0.85), rgba(102, 194, 255, 0.48));
+      -webkit-mask:
+        linear-gradient(#fff 0 0) content-box,
+        linear-gradient(#fff 0 0);
+      -webkit-mask-composite: xor;
+      mask-composite: exclude;
+      pointer-events: none;
+    }
+
+    &::after {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 14px;
+      bottom: 14px;
+      width: 4px;
+      border-radius: 999px;
+      background: linear-gradient(180deg, rgba(26, 99, 217, 0.98), rgba(94, 199, 255, 0.82));
+      box-shadow: 0 0 14px rgba(26, 99, 217, 0.28);
+      pointer-events: none;
+    }
+
+    &:hover {
+      transform: translateY(-4px);
+      box-shadow:
+        0 18px 40px rgba(26, 99, 217, 0.2),
+        0 0 0 1px rgba(26, 99, 217, 0.12) !important;
+    }
+  }
+
+  &.is-current-paused {
+    border-color: rgba(234, 152, 58, 0.4) !important;
+    background:
+      linear-gradient(135deg, rgba(255, 184, 77, 0.08), rgba(255, 255, 255, 0.97) 40%),
+      $color-surface-container-lowest !important;
+    box-shadow:
+      0 14px 30px rgba(234, 152, 58, 0.12),
+      0 0 0 1px rgba(234, 152, 58, 0.08) !important;
+  }
+
+  .checklist-item__drag-handle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    margin-top: 4px;
+    border-radius: 8px;
+    color: $color-outline;
+    cursor: grab;
+    flex-shrink: 0;
+    transition: $transition-base;
+
+    &:hover {
+      background: $color-surface-container;
+      color: $color-primary;
+    }
+
+    &:active {
+      cursor: grabbing;
+    }
+  }
+
+  .checklist-item__actions {
+    display: flex;
+    gap: 4px;
+    opacity: 0.45;
+    pointer-events: auto;
+    transition: opacity 0.2s ease;
+    flex-shrink: 0;
+  }
+
+  .checklist-item__actions.is-visible,
+  &:hover .checklist-item__actions {
+    opacity: 1;
+  }
+
+  .checklist-item__title-row {
+    min-width: 0;
+  }
+
+  .checklist-item__title-wrap {
+    min-width: 0;
+    flex: 1;
+  }
+
+  .checklist-item__title.has-description {
+    cursor: help;
+    text-decoration-thickness: 1px;
+    text-decoration-style: dotted;
+  }
+
+  .checklist-item__active-chip {
+    flex-shrink: 0;
+    margin-top: 1px;
+    border-radius: 999px !important;
+    font-weight: 800 !important;
+    letter-spacing: 0.01em;
+
+    .MuiChip-icon {
+      font-size: 15px;
+      margin-left: 8px;
+    }
+
+    .MuiChip-label {
+      padding-left: 4px;
+      padding-right: 10px;
+    }
+
+    &.is-running {
+      background: linear-gradient(135deg, rgba(26, 99, 217, 0.14), rgba(73, 174, 255, 0.22)) !important;
+      border: 1px solid rgba(26, 99, 217, 0.22) !important;
+      color: $color-primary !important;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.65);
+    }
+
+    &.is-paused {
+      background: linear-gradient(135deg, rgba(255, 184, 77, 0.18), rgba(255, 224, 163, 0.26)) !important;
+      border: 1px solid rgba(234, 152, 58, 0.24) !important;
+      color: #9d5d0c !important;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.65);
+    }
   }
 }
 

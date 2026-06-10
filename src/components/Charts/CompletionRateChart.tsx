@@ -11,7 +11,7 @@ interface CompletionRateChartProps {
 
 export function CompletionRateChart({
   items,
-  title = 'Completion stats',
+  title = '完成统计',
   height = 300
 }: CompletionRateChartProps) {
   const chartData = useMemo(() => {
@@ -19,8 +19,8 @@ export function CompletionRateChart({
     const pending = items.length - completed
 
     return [
-      { name: 'Completed', value: completed },
-      { name: 'Pending', value: pending }
+      { name: '已完成', value: completed },
+      { name: '待完成', value: pending }
     ]
   }, [items])
 
@@ -35,18 +35,18 @@ export function CompletionRateChart({
         </Typography>
 
         {items.length === 0 ? (
-          <Box sx={{ height, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <Typography color="text.secondary">No data</Typography>
+          <Box className="completion-rate-chart__empty" sx={{ height, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <Typography color="text.secondary">暂无数据</Typography>
           </Box>
         ) : (
           <>
-            <Box sx={{ display: 'flex', justifyContent: 'center', mb: 2 }}>
-              <Box sx={{ textAlign: 'center' }}>
+            <Box className="completion-rate-chart__summary" sx={{ display: 'flex', justifyContent: 'center', mb: 2 }}>
+              <Box className="completion-rate-chart__summary-value" sx={{ textAlign: 'center' }}>
                 <Typography variant="h3" color="primary">
                   {completionRate}%
                 </Typography>
                 <Typography variant="body2" color="text.secondary">
-                  Completion rate
+                  完成率
                 </Typography>
               </Box>
             </Box>
@@ -71,9 +71,9 @@ export function CompletionRateChart({
             </ResponsiveContainer>
 
             <Stack direction="row" spacing={1} sx={{ mt: 2, justifyContent: 'center', flexWrap: 'wrap' }}>
-              <Chip label={`Total: ${items.length}`} variant="outlined" />
-              <Chip label={`Completed: ${chartData[0].value}`} color="success" variant="outlined" />
-              <Chip label={`Pending: ${chartData[1].value}`} color="warning" variant="outlined" />
+              <Chip label={`总计：${items.length}`} variant="outlined" />
+              <Chip label={`已完成：${chartData[0].value}`} color="success" variant="outlined" />
+              <Chip label={`待完成：${chartData[1].value}`} color="warning" variant="outlined" />
             </Stack>
           </>
         )}

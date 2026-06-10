@@ -1,75 +1,95 @@
 import { useMemo } from 'react'
 import { Box, Card, CardContent, Typography } from '@mui/material'
 import {
-  BarChart,
   Bar,
-  XAxis,
-  YAxis,
+  BarChart,
   CartesianGrid,
-  Tooltip,
   Legend,
-  ResponsiveContainer
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis
 } from 'recharts'
-import type { ForgetCurveSchedule } from '@/types'
-import { FORGET_CURVE_INTERVALS } from '@/utils/forgetCurveUtils'
+import type { ChecklistItem } from '@/types'
+import { FORGET_CURVE_INTERVALS, createInitialReviewSchedule, generateReviewPlan } from '@/utils/forgetCurveUtils'
 
 interface ForgetCurveProgressChartProps {
-  schedules: ForgetCurveSchedule[]
+  items: ChecklistItem[]
   title?: string
   height?: number
 }
 
 export function ForgetCurveProgressChart({
-  schedules,
-  title = '遗忘曲线复习进度',
+  items,
+  title = '复习阶段进度',
   height = 300
 }: ForgetCurveProgressChartProps) {
   const chartData = useMemo(() => {
-    // 计算每个复习阶段的数量
-    const levelCounts: Record<number, number> = {}
+    const allReviewItems = items.filter((item) => item.inForgetCurve)
+
+    const cumulativeLevelCounts: Record<number, number> = {}
+    const activeLevelCounts: Record<number, number> = {}
 
     FORGET_CURVE_INTERVALS.forEach((_, level) => {
-      levelCounts[level] = 0
+      cumulativeLevelCounts[level] = 0
+      activeLevelCounts[level] = 0
     })
 
-    schedules.forEach(schedule => {
-      if (schedule.level < FORGET_CURVE_INTERVALS.length) {
-        levelCounts[schedule.level] = (levelCounts[schedule.level] || 0) + 1
-      }
+    allReviewItems.forEach((item) => {
+      const baseDate = item.completedAt ?? item.date
+      const fullPlan = generateReviewPlan(baseDate, true)
+      const currentSchedule = item.forgetCurveData ?? createInitialReviewSchedule(baseDate)
+
+      fullPlan.forEach((schedule) => {
+        cumulativeLevelCounts[schedule.level] = (cumulativeLevelCounts[schedule.level] || 0) + 1
+      })
+
+      activeLevelCounts[currentSchedule.level] = (activeLevelCounts[currentSchedule.level] || 0) + 1
     })
 
     return FORGET_CURVE_INTERVALS.map((days, level) => ({
-      level: `第 ${level} 阶段\n(${days}天)`,
-      count: levelCounts[level] || 0
+      level: `阶段 ${level}`,
+      interval: `${days} 天`,
+      cumulativeCount: cumulativeLevelCounts[level] || 0,
+      activeCount: activeLevelCounts[level] || 0
     }))
-  }, [schedules])
+  }, [items])
 
   return (
     <Card>
       <CardContent>
-        <Typography variant="h6" sx={{ mb: 2 }}>
+        <Typography variant="h6" sx={{ mb: 1.5 }}>
           {title}
         </Typography>
+        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+          浅色柱表示所有复习任务在完整遗忘曲线里会经过该阶段多少次，深色柱表示当前正停留在该阶段的任务数。
+        </Typography>
 
-        {chartData.length === 0 || chartData.every(d => d.count === 0) ? (
-          <Box sx={{ height, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <Typography color="text.secondary">
-              暂无复习数据
-            </Typography>
+        {chartData.every((item) => item.cumulativeCount === 0 && item.activeCount === 0) ? (
+          <Box
+            className="forget-curve-progress-chart__empty"
+            sx={{ height, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+          >
+            <Typography color="text.secondary">暂无复习数据</Typography>
           </Box>
         ) : (
           <ResponsiveContainer width="100%" height={height}>
             <BarChart data={chartData}>
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis dataKey="level" />
-              <YAxis />
-              <Tooltip />
-              <Legend />
-              <Bar
-                dataKey="count"
-                fill="#667eea"
-                name="任务数"
+              <YAxis allowDecimals={false} />
+              <Tooltip
+                formatter={(value, name, item) => {
+                  if (name === 'activeCount') {
+                    return [value, `当前停留任务数 · ${item.payload.interval}`]
+                  }
+
+                  return [value, `累计经过任务数 · ${item.payload.interval}`]
+                }}
               />
+              <Legend />
+              <Bar dataKey="cumulativeCount" fill="#9bbcff" name="累计经过该阶段的任务数" />
+              <Bar dataKey="activeCount" fill="#1a63d9" name="当前停留在该阶段的任务数" />
             </BarChart>
           </ResponsiveContainer>
         )}

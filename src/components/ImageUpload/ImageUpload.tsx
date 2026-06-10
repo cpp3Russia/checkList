@@ -116,6 +116,7 @@ export function ImageUpload({
       />
 
       <Box
+        className="img-up__dropzone"
         sx={{
           border: '2px dashed',
           borderColor: canUpload ? 'primary.main' : 'text.disabled',
@@ -150,12 +151,12 @@ export function ImageUpload({
         )}
       </Box>
 
-      <Box sx={{ mt: 1, fontSize: '0.875rem', color: 'text.secondary' }}>
+      <Box className="img-up__counter" sx={{ mt: 1, fontSize: '0.875rem', color: 'text.secondary' }}>
         {images.length} / {maxImages} uploaded
       </Box>
 
       {images.length > 0 && (
-        <Box sx={{ mt: 3 }}>
+        <Box className="img-up__gallery" sx={{ mt: 3 }}>
           <ImageList cols={3} gap={8} sx={{ width: '100%' }}>
             {images.map((image, index) => (
               <ImageListItem key={index} sx={{ position: 'relative' }}>

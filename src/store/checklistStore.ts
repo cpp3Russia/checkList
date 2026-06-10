@@ -27,6 +27,13 @@ export const useChecklistStore = create<ChecklistStore>()(
 
     addItem: (item) => {
       set((state) => {
+        const existingIndex = state.items.findIndex((entry) => entry.id === item.id)
+
+        if (existingIndex >= 0) {
+          state.items[existingIndex] = item
+          return
+        }
+
         state.items.push(item)
       })
     },

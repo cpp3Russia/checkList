@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import {
   Container,
   Box,
@@ -21,13 +21,12 @@ export function ChecklistPage() {
   const [openModal, setOpenModal] = useState(false)
   const [editingItem, setEditingItem] = useState<ChecklistItemType | null>(null)
 
-  const { items, loading, error, addItem, removeItem } = useChecklistData(currentDate)
+  const { items, loading, error, saveItem, removeItem } = useChecklistData(currentDate)
   const checklistStore = useChecklistStore()
 
   const handleAddTask = async (item: ChecklistItemType) => {
     try {
-      await addItem(item)
-      checklistStore.addItem(item)
+      await saveItem(item)
       setOpenModal(false)
     } catch (err) {
       console.error('添加任务失败:', err)
@@ -37,7 +36,6 @@ export function ChecklistPage() {
   const handleDeleteItem = async (id: string) => {
     try {
       await removeItem(id)
-      checklistStore.removeItem(id)
     } catch (err) {
       console.error('删除任务失败:', err)
     }
@@ -60,7 +58,7 @@ export function ChecklistPage() {
   return (
     <Container maxWidth="md" sx={{ py: 3 }}>
       {/* 页面标题 */}
-      <Box sx={{ mb: 3 }}>
+      <Box className="checklist-page__header" sx={{ mb: 3 }}>
         <Typography variant="h4" component="h1" sx={{ mb: 1 }}>
           待办清单
         </Typography>
@@ -96,21 +94,21 @@ export function ChecklistPage() {
 
       {/* 加载中 */}
       {loading ? (
-        <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
+        <Box className="checklist-page__loading" sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
           <CircularProgress />
         </Box>
       ) : items.length === 0 ? (
-        <Box sx={{ textAlign: 'center', py: 4 }}>
+        <Box className="checklist-page__empty" sx={{ textAlign: 'center', py: 4 }}>
           <Typography color="text.secondary" sx={{ mb: 2 }}>
             暂无任务，点击"新增任务"开始吧
           </Typography>
         </Box>
       ) : (
         /* 任务列表 */
-        <Box>
+        <Box className="checklist-page__list">
           {/* 已完成的任务 */}
           {items.filter(item => !item.completed).length > 0 && (
-            <Box sx={{ mb: 3 }}>
+            <Box className="checklist-page__pending-section" sx={{ mb: 3 }}>
               <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 2 }}>
                 待完成 ({items.filter(item => !item.completed).length})
               </Typography>
@@ -130,7 +128,7 @@ export function ChecklistPage() {
 
           {/* 已完成的任务 */}
           {items.filter(item => item.completed).length > 0 && (
-            <Box>
+            <Box className="checklist-page__completed-section">
               <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 2 }}>
                 已完成 ({items.filter(item => item.completed).length})
               </Typography>

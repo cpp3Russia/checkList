@@ -2,52 +2,204 @@ import { useEffect, useState } from 'react'
 import type { ChecklistItem } from '@/types'
 import { useChecklistStore } from '@/store/checklistStore'
 import { storageService } from '@/services/storageService'
+import { FORGET_CURVE_INTERVALS, calculateNextReviewDate, createInitialReviewSchedule } from '@/utils/forgetCurveUtils'
+import { isSameDay } from '@/utils/dateUtils'
+
+const LAST_REVIEW_LEVEL = FORGET_CURVE_INTERVALS.length - 1
+const REVIEW_INSTANCE_SUFFIX = '::review::'
+
+const isPersistedReviewInstance = (item: ChecklistItem) => item.id.includes(REVIEW_INSTANCE_SUFFIX)
+
+const hydrateForgetCurveItem = (item: ChecklistItem): ChecklistItem => {
+  const taskScope = item.taskScope ?? 'daily'
+
+  if (taskScope === 'master') {
+    return {
+      ...item,
+      taskScope,
+      inForgetCurve: false,
+      reviewOccurrenceDate: undefined,
+      forgetCurveData: undefined
+    }
+  }
+
+  if (!item.inForgetCurve) {
+    return {
+      ...item,
+      taskScope,
+      reviewOccurrenceDate: undefined
+    }
+  }
+
+  const schedule = item.forgetCurveData ?? createInitialReviewSchedule(item.completedAt ?? item.date)
+
+  return {
+    ...item,
+    taskScope,
+    forgetCurveData: schedule,
+    reviewOccurrenceDate: item.reviewOccurrenceDate ?? schedule.nextReviewDate
+  }
+}
+
+const buildReviewInstances = (item: ChecklistItem): ChecklistItem[] => {
+  if (!item.inForgetCurve || !item.forgetCurveData || !item.reviewOccurrenceDate) {
+    return []
+  }
+
+  const reviewInstances: ChecklistItem[] = []
+  let currentSchedule = { ...item.forgetCurveData }
+  let currentOccurrenceDate = new Date(item.reviewOccurrenceDate)
+
+  for (let level = currentSchedule.level; level <= LAST_REVIEW_LEVEL; level += 1) {
+    reviewInstances.push({
+      ...item,
+      id: `${item.id}::review::${currentOccurrenceDate.getTime()}`,
+      date: currentOccurrenceDate,
+      isReviewInstance: true,
+      reviewSourceItemId: item.id,
+      completed: false,
+      completedAt: undefined,
+      completedDurationMs: undefined
+    })
+
+    if (level >= LAST_REVIEW_LEVEL) {
+      break
+    }
+
+    currentSchedule = calculateNextReviewDate(level, currentOccurrenceDate)
+    currentOccurrenceDate = new Date(currentSchedule.nextReviewDate)
+  }
+
+  return reviewInstances
+}
+
+const buildReviewHistoryEntries = (item: ChecklistItem): ChecklistItem[] => {
+  if (!item.reviewHistory?.length) {
+    return []
+  }
+
+  return item.reviewHistory.map((entry) => ({
+    ...item,
+    id: entry.id,
+    date: new Date(entry.occurrenceDate),
+    completed: true,
+    completedAt: new Date(entry.completedAt),
+    completedDurationMs: entry.completedDurationMs,
+    isReviewInstance: false,
+    isReviewHistoryEntry: true,
+    reviewSourceItemId: item.id
+  }))
+}
 
 export function useChecklistData(date: Date) {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  const items = useChecklistStore(state => state.items)
-  const setItems = useChecklistStore(state => state.setItems)
+  const items = useChecklistStore((state) => state.items)
+  const setItems = useChecklistStore((state) => state.setItems)
 
-  // 当日期变化时，拉取数据并存入 store
   useEffect(() => {
     const loadData = async () => {
       try {
         setLoading(true)
         setError(null)
+        const storedItems = await storageService.getAllItems()
+        const invalidReviewInstances = storedItems.filter(isPersistedReviewInstance)
 
-        // 从存储服务加载该日期的所有数据
-        const data = await storageService.getItemsByDate(date)
-        
-        // 合并到 store 中已有数据（避免重复加载不同日期的数据时丢失已改但未存的状态）
-        // 简单处理：直接全量替换为当前日期的数据，或者更复杂的按 ID 更新
-        setItems(data)
+        if (invalidReviewInstances.length > 0) {
+          await Promise.all(invalidReviewInstances.map((item) => storageService.deleteItem(item.id)))
+        }
+
+        const data = storedItems.filter((item) => !isPersistedReviewInstance(item))
+        const hydratedItems = data.map(hydrateForgetCurveItem)
+        const itemsNeedingUpdate = hydratedItems.filter((item, index) => {
+          const source = data[index]
+          return (
+            source.inForgetCurve &&
+            (!source.forgetCurveData || !source.reviewOccurrenceDate)
+          )
+        })
+
+        if (itemsNeedingUpdate.length > 0) {
+          await Promise.all(itemsNeedingUpdate.map((item) => storageService.saveItem(item)))
+        }
+
+        setItems(hydratedItems)
       } catch (err) {
-        setError(err instanceof Error ? err.message : '加载失败')
+        setError(err instanceof Error ? err.message : '加载任务失败')
         console.error('加载清单数据失败:', err)
       } finally {
         setLoading(false)
       }
     }
 
-    loadData()
-  }, [date]) // 移除了 storeItems 依赖，避免循环触发
+    void loadData()
+  }, [date, setItems])
 
-  // 过滤出当前日期要显示的任务
-  const dateStr = date.toDateString()
-  const displayItems = items.filter(item => {
-    const itemDate = new Date(item.date)
-    return itemDate.toDateString() === dateStr
-  })
+  const displayItems = items
+    .filter((item) => (item.taskScope ?? 'daily') === 'daily')
+    .flatMap((item) => {
+      const entries: ChecklistItem[] = []
 
-  const addItem = async (item: ChecklistItem) => {
+      if (isSameDay(new Date(item.date), date)) {
+        entries.push(item)
+      }
+
+      buildReviewInstances(item).forEach((reviewInstance) => {
+        if (isSameDay(reviewInstance.date, date)) {
+          entries.push(reviewInstance)
+        }
+      })
+
+      buildReviewHistoryEntries(item).forEach((historyEntry) => {
+        if (isSameDay(historyEntry.date, date)) {
+          entries.push(historyEntry)
+        }
+      })
+
+      return entries
+    })
+    .sort((a, b) => {
+      const aOrder = a.sortOrder ?? Number.MAX_SAFE_INTEGER
+      const bOrder = b.sortOrder ?? Number.MAX_SAFE_INTEGER
+
+      if (aOrder !== bOrder) {
+        return aOrder - bOrder
+      }
+
+      return a.createdAt.getTime() - b.createdAt.getTime()
+    })
+
+  const saveItem = async (item: ChecklistItem) => {
     try {
-      await storageService.saveItem(item)
-      // 更新 store 会自动触发 re-render
-      useChecklistStore.getState().addItem(item)
+      const normalizedItem = hydrateForgetCurveItem(item)
+      await storageService.saveItem(normalizedItem)
+      useChecklistStore.getState().addItem(normalizedItem)
     } catch (err) {
-      setError(err instanceof Error ? err.message : '添加失败')
+      setError(err instanceof Error ? err.message : '保存任务失败')
+      throw err
+    }
+  }
+
+  const saveItems = async (nextItems: ChecklistItem[]) => {
+    try {
+      const normalizedItems = nextItems.map(hydrateForgetCurveItem)
+
+      await Promise.all(normalizedItems.map((item) => storageService.saveItem(item)))
+
+      const currentItems = useChecklistStore.getState().items
+      const nextItemMap = new Map(normalizedItems.map((item) => [item.id, item]))
+      const mergedItems = currentItems.map((item) => nextItemMap.get(item.id) ?? item)
+
+      normalizedItems.forEach((item) => {
+        if (!mergedItems.some((entry) => entry.id === item.id)) {
+          mergedItems.push(item)
+        }
+      })
+
+      useChecklistStore.getState().setItems(mergedItems)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : '更新任务顺序失败')
       throw err
     }
   }
@@ -57,7 +209,7 @@ export function useChecklistData(date: Date) {
       await storageService.deleteItem(id)
       useChecklistStore.getState().removeItem(id)
     } catch (err) {
-      setError(err instanceof Error ? err.message : '删除失败')
+      setError(err instanceof Error ? err.message : '删除任务失败')
       throw err
     }
   }
@@ -66,7 +218,8 @@ export function useChecklistData(date: Date) {
     items: displayItems,
     loading,
     error,
-    addItem,
+    saveItem,
+    saveItems,
     removeItem
   }
 }

@@ -80,6 +80,19 @@ export class StorageService {
     return this.db
   }
 
+  private sortItems(items: ChecklistItem[]): ChecklistItem[] {
+    return [...items].sort((a, b) => {
+      const aOrder = a.sortOrder ?? Number.MAX_SAFE_INTEGER
+      const bOrder = b.sortOrder ?? Number.MAX_SAFE_INTEGER
+
+      if (aOrder !== bOrder) {
+        return aOrder - bOrder
+      }
+
+      return a.createdAt.getTime() - b.createdAt.getTime()
+    })
+  }
+
   async saveItem(item: ChecklistItem): Promise<void> {
     const db = await this.ensureDb()
 
@@ -88,7 +101,20 @@ export class StorageService {
       const store = transaction.objectStore('checklists')
       const request = store.put({
         ...item,
-        date: item.date.getTime()
+        date: item.date.getTime(),
+        reviewOccurrenceDate: item.reviewOccurrenceDate?.getTime(),
+        reviewHistory: item.reviewHistory?.map((entry) => ({
+          ...entry,
+          occurrenceDate: entry.occurrenceDate.getTime(),
+          completedAt: entry.completedAt.getTime()
+        })),
+        forgetCurveData: item.forgetCurveData
+          ? {
+              ...item.forgetCurveData,
+              nextReviewDate: item.forgetCurveData.nextReviewDate.getTime(),
+              lastReviewDate: item.forgetCurveData.lastReviewDate.getTime()
+            }
+          : undefined
       })
 
       request.onerror = () => reject(request.error)
@@ -109,9 +135,28 @@ export class StorageService {
         const data = request.result
         if (data) {
           data.date = new Date(data.date)
+          if (data.reviewOccurrenceDate) {
+            data.reviewOccurrenceDate = new Date(data.reviewOccurrenceDate)
+          }
+          if (Array.isArray(data.reviewHistory)) {
+            data.reviewHistory = data.reviewHistory.map((entry: {
+              id: string
+              occurrenceDate: number | Date
+              completedAt: number | Date
+              completedDurationMs?: number
+            }) => ({
+              ...entry,
+              occurrenceDate: new Date(entry.occurrenceDate),
+              completedAt: new Date(entry.completedAt)
+            }))
+          }
           data.createdAt = new Date(data.createdAt)
           if (data.completedAt) {
             data.completedAt = new Date(data.completedAt)
+          }
+          if (data.forgetCurveData) {
+            data.forgetCurveData.nextReviewDate = new Date(data.forgetCurveData.nextReviewDate)
+            data.forgetCurveData.lastReviewDate = new Date(data.forgetCurveData.lastReviewDate)
           }
         }
         resolve(data)
@@ -139,19 +184,47 @@ export class StorageService {
       request.onsuccess = () => {
         const items = request.result as Array<ChecklistItem & {
           date: number
+          reviewOccurrenceDate?: number
+          reviewHistory?: Array<{
+            id: string
+            occurrenceDate: number | Date
+            completedAt: number | Date
+            completedDurationMs?: number
+          }>
           createdAt: number | Date
           completedAt?: number | Date
+          forgetCurveData?: ChecklistItem['forgetCurveData'] & {
+            nextReviewDate: number | Date
+            lastReviewDate: number | Date
+          }
         }>
 
         resolve(
-          items.map((storedItem) => ({
-            ...storedItem,
-            date: new Date(storedItem.date),
-            createdAt: new Date(storedItem.createdAt),
-            completedAt: storedItem.completedAt
-              ? new Date(storedItem.completedAt)
-              : undefined
-          }))
+          this.sortItems(
+            items.map((storedItem) => ({
+              ...storedItem,
+              date: new Date(storedItem.date),
+              reviewOccurrenceDate: storedItem.reviewOccurrenceDate
+                ? new Date(storedItem.reviewOccurrenceDate)
+                : undefined,
+              reviewHistory: storedItem.reviewHistory?.map((entry) => ({
+                ...entry,
+                occurrenceDate: new Date(entry.occurrenceDate),
+                completedAt: new Date(entry.completedAt)
+              })),
+              createdAt: new Date(storedItem.createdAt),
+              completedAt: storedItem.completedAt
+                ? new Date(storedItem.completedAt)
+                : undefined,
+              forgetCurveData: storedItem.forgetCurveData
+                ? {
+                    ...storedItem.forgetCurveData,
+                    nextReviewDate: new Date(storedItem.forgetCurveData.nextReviewDate),
+                    lastReviewDate: new Date(storedItem.forgetCurveData.lastReviewDate)
+                  }
+                : undefined
+            }))
+          )
         )
       }
     })
@@ -170,18 +243,46 @@ export class StorageService {
         const items = request.result as Array<
           ChecklistItem & {
             date: number
+            reviewOccurrenceDate?: number
+            reviewHistory?: Array<{
+              id: string
+              occurrenceDate: number | Date
+              completedAt: number | Date
+              completedDurationMs?: number
+            }>
             createdAt: number | Date
             completedAt?: number | Date
+            forgetCurveData?: ChecklistItem['forgetCurveData'] & {
+              nextReviewDate: number | Date
+              lastReviewDate: number | Date
+            }
           }
         >
 
         resolve(
-          items.map((storedItem) => ({
-            ...storedItem,
-            date: new Date(storedItem.date),
-            createdAt: new Date(storedItem.createdAt),
-            completedAt: storedItem.completedAt ? new Date(storedItem.completedAt) : undefined
-          }))
+          this.sortItems(
+            items.map((storedItem) => ({
+              ...storedItem,
+              date: new Date(storedItem.date),
+              reviewOccurrenceDate: storedItem.reviewOccurrenceDate
+                ? new Date(storedItem.reviewOccurrenceDate)
+                : undefined,
+              reviewHistory: storedItem.reviewHistory?.map((entry) => ({
+                ...entry,
+                occurrenceDate: new Date(entry.occurrenceDate),
+                completedAt: new Date(entry.completedAt)
+              })),
+              createdAt: new Date(storedItem.createdAt),
+              completedAt: storedItem.completedAt ? new Date(storedItem.completedAt) : undefined,
+              forgetCurveData: storedItem.forgetCurveData
+                ? {
+                    ...storedItem.forgetCurveData,
+                    nextReviewDate: new Date(storedItem.forgetCurveData.nextReviewDate),
+                    lastReviewDate: new Date(storedItem.forgetCurveData.lastReviewDate)
+                  }
+                : undefined
+            }))
+          )
         )
       }
     })

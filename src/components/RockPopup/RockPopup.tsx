@@ -145,7 +145,7 @@ export function RockPopup({
         <Card className="p-card">
           {title && (
             <Box className="p-header">
-              <Typography variant="h6" className="p-title">
+              <Typography variant="h4" className="p-title">
                 {title}
               </Typography>
               <Box className="p-close" onClick={onClose}>
@@ -208,7 +208,7 @@ export function RewardPopup({
       sound="victory"
       onAnimationComplete={onAnimationComplete}
     >
-      <Box sx={{ textAlign: 'center', py: 2 }}>
+      <Box className="reward-popup__content" sx={{ textAlign: 'center', py: 2 }}>
         <Typography variant="h5" sx={{ mb: 1, color: '#FFD700' }}>
           Reward
         </Typography>
@@ -233,7 +233,7 @@ export function ConfirmPopup({
 }) {
   return (
     <RockPopup open={open} onClose={onClose} title={title} variant="centerPop" sound="ding">
-      <Box sx={{ py: 2 }}>
+      <Box className="confirm-popup__content" sx={{ py: 2 }}>
         <Typography sx={{ mb: 2 }}>{message}</Typography>
         <Stack direction="row" spacing={2} justifyContent="center">
           <Button variant="outlined" onClick={onClose}>

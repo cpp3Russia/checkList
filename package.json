@@ -1,6 +1,7 @@
 {
-  "name": "react-forget-curve-checklist",
+  "name": "checklist",
   "version": "1.0.0",
+  "homepage": "https://cpp3Russia.github.io/checklist",
   "description": "Checklist app built with React.",
   "type": "module",
   "main": "dist/index.js",
@@ -49,6 +50,7 @@
     "@vitejs/plugin-react": "^4.3.4",
     "eslint": "^9.15.0",
     "eslint-plugin-react": "^7.37.0",
+    "gh-pages": "^6.3.0",
     "prettier": "^3.3.3",
     "sass": "^1.83.0",
     "scss": "^0.2.4",

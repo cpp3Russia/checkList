@@ -327,6 +327,7 @@ export const DateSelector: React.FC<DateSelectorProps> = ({
             size="small"
             onClick={() => setShowOptions(!showOptions)}
             variant="text"
+            sx={{fontSize:16}}
           >
             快捷选择
           </Button>

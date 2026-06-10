@@ -1,23 +1,26 @@
 import { useState } from 'react'
 import {
-  Container,
+  Alert,
   Box,
+  Button,
   Card,
   CardContent,
-  Typography,
-  Stack,
-  FormControlLabel,
   Checkbox,
-  Select,
-  MenuItem,
   FormControl,
+  FormControlLabel,
   InputLabel,
-  Button,
-  Alert
+  MenuItem,
+  Select,
+  Stack,
+  Typography
 } from '@mui/material'
 import { Save as SaveIcon } from '@mui/icons-material'
 
-export function SettingsPage() {
+interface SettingsPageProps {
+  onBack?: () => void
+}
+
+export function SettingsPage({ onBack }: SettingsPageProps) {
   const [preferences, setPreferences] = useState({
     theme: 'light' as 'light' | 'dark',
     language: 'zh' as 'zh' | 'en',
@@ -25,152 +28,108 @@ export function SettingsPage() {
     autoCompleteOnReminder: false,
     forgetCurveEnabled: true
   })
-
   const [saved, setSaved] = useState(false)
 
-  const handleThemeChange = (e: any) => {
-    setPreferences(prev => ({
-      ...prev,
-      theme: e.target.value
-    }))
-    setSaved(false)
-  }
-
-  const handleLanguageChange = (e: any) => {
-    setPreferences(prev => ({
-      ...prev,
-      language: e.target.value
-    }))
-    setSaved(false)
-  }
-
-  const handleNotificationsChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setPreferences(prev => ({
-      ...prev,
-      notificationsEnabled: e.target.checked
-    }))
-    setSaved(false)
-  }
-
-  const handleAutoCompleteChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setPreferences(prev => ({
-      ...prev,
-      autoCompleteOnReminder: e.target.checked
-    }))
-    setSaved(false)
-  }
-
-  const handleForgetCurveChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setPreferences(prev => ({
-      ...prev,
-      forgetCurveEnabled: e.target.checked
-    }))
-    setSaved(false)
-  }
-
-  const handleSave = async () => {
-    try {
-      // 保存设置到本地存储或后端
-      localStorage.setItem('userPreferences', JSON.stringify(preferences))
-      setSaved(true)
-      setTimeout(() => setSaved(false), 3000)
-    } catch (err) {
-      console.error('保存设置失败:', err)
-    }
+  const handleSave = () => {
+    localStorage.setItem('userPreferences', JSON.stringify(preferences))
+    setSaved(true)
+    window.setTimeout(() => setSaved(false), 3000)
   }
 
   return (
-    <Container maxWidth="sm" sx={{ py: 3 }}>
-      {/* 页面标题 */}
-      <Box sx={{ mb: 3 }}>
+    <Box className="settings-page" sx={{ height: '100%', overflowY: 'auto', pr: 1 }}>
+      <Box className="settings-page__header" sx={{ mb: 3 }}>
+        {onBack && (
+          <Button variant="outlined" size="small" sx={{ mb: 2 }} onClick={onBack}>
+            返回任务页
+          </Button>
+        )}
         <Typography variant="h4" component="h1" sx={{ mb: 1 }}>
-          设置
+          偏好设置
         </Typography>
         <Typography variant="body2" color="text.secondary">
-          配置应用的个性化设置
+          这里保留全局偏好和数据管理入口。
         </Typography>
       </Box>
 
-      {/* 保存成功提示 */}
       {saved && (
         <Alert severity="success" sx={{ mb: 2 }}>
           设置已保存
         </Alert>
       )}
 
-      {/* 外观设置 */}
       <Card sx={{ mb: 3 }}>
         <CardContent>
           <Typography variant="h6" sx={{ mb: 2 }}>
             外观设置
           </Typography>
-
           <Stack spacing={2}>
-            {/* 主题 */}
             <FormControl fullWidth>
               <InputLabel>主题</InputLabel>
               <Select
                 value={preferences.theme}
                 label="主题"
-                onChange={handleThemeChange}
+                onChange={(event) =>
+                  setPreferences((prev) => ({ ...prev, theme: event.target.value as 'light' | 'dark' }))
+                }
               >
                 <MenuItem value="light">浅色</MenuItem>
                 <MenuItem value="dark">深色</MenuItem>
               </Select>
             </FormControl>
 
-            {/* 语言 */}
             <FormControl fullWidth>
               <InputLabel>语言</InputLabel>
               <Select
                 value={preferences.language}
                 label="语言"
-                onChange={handleLanguageChange}
+                onChange={(event) =>
+                  setPreferences((prev) => ({ ...prev, language: event.target.value as 'zh' | 'en' }))
+                }
               >
                 <MenuItem value="zh">中文</MenuItem>
-                <MenuItem value="en">English</MenuItem>
+                <MenuItem value="en">英文</MenuItem>
               </Select>
             </FormControl>
           </Stack>
         </CardContent>
       </Card>
 
-      {/* 功能设置 */}
       <Card sx={{ mb: 3 }}>
         <CardContent>
           <Typography variant="h6" sx={{ mb: 2 }}>
             功能设置
           </Typography>
-
           <Stack spacing={1}>
-            {/* 通知开关 */}
             <FormControlLabel
               control={
                 <Checkbox
                   checked={preferences.notificationsEnabled}
-                  onChange={handleNotificationsChange}
+                  onChange={(event) =>
+                    setPreferences((prev) => ({ ...prev, notificationsEnabled: event.target.checked }))
+                  }
                 />
               }
               label="启用通知提醒"
             />
-
-            {/* 自动完成开关 */}
             <FormControlLabel
               control={
                 <Checkbox
                   checked={preferences.autoCompleteOnReminder}
-                  onChange={handleAutoCompleteChange}
+                  onChange={(event) =>
+                    setPreferences((prev) => ({ ...prev, autoCompleteOnReminder: event.target.checked }))
+                  }
                 />
               }
-              label="提醒时自动标记为已完成"
+              label="提醒时自动完成"
             />
-
-            {/* 遗忘曲线开关 */}
             <FormControlLabel
               control={
                 <Checkbox
                   checked={preferences.forgetCurveEnabled}
-                  onChange={handleForgetCurveChange}
+                  onChange={(event) =>
+                    setPreferences((prev) => ({ ...prev, forgetCurveEnabled: event.target.checked }))
+                  }
                 />
               }
               label="启用遗忘曲线复习"
@@ -179,13 +138,11 @@ export function SettingsPage() {
         </CardContent>
       </Card>
 
-      {/* 数据管理 */}
       <Card sx={{ mb: 3 }}>
         <CardContent>
           <Typography variant="h6" sx={{ mb: 2 }}>
             数据管理
           </Typography>
-
           <Stack spacing={1}>
             <Button variant="outlined" fullWidth>
               导出数据
@@ -200,40 +157,9 @@ export function SettingsPage() {
         </CardContent>
       </Card>
 
-      {/* 关于 */}
-      <Card sx={{ mb: 3 }}>
-        <CardContent>
-          <Typography variant="h6" sx={{ mb: 2 }}>
-            关于应用
-          </Typography>
-
-          <Stack spacing={1}>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-              <Typography color="text.secondary">应用版本</Typography>
-              <Typography>1.0.0</Typography>
-            </Box>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-              <Typography color="text.secondary">更新日期</Typography>
-              <Typography>2026-05-25</Typography>
-            </Box>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-              <Typography color="text.secondary">构建信息</Typography>
-              <Typography>React 18 + Vite</Typography>
-            </Box>
-          </Stack>
-        </CardContent>
-      </Card>
-
-      {/* 保存按钮 */}
-      <Button
-        variant="contained"
-        startIcon={<SaveIcon />}
-        onClick={handleSave}
-        fullWidth
-        size="large"
-      >
+      <Button variant="contained" startIcon={<SaveIcon />} onClick={handleSave} fullWidth size="large">
         保存设置
       </Button>
-    </Container>
+    </Box>
   )
 }

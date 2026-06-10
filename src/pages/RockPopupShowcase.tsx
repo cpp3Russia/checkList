@@ -24,7 +24,7 @@ export function RockPopupShowcase() {
       </Typography>
 
       <Stack spacing={3}>
-        <Box>
+        <Box className="rock-popup-showcase__basic">
           <Typography variant="h6" sx={{ mb: 2 }}>
             Basic popup
           </Typography>
@@ -33,7 +33,7 @@ export function RockPopupShowcase() {
           </Button>
         </Box>
 
-        <Box>
+        <Box className="rock-popup-showcase__reward">
           <Typography variant="h6" sx={{ mb: 2 }}>
             Reward popup
           </Typography>
@@ -42,7 +42,7 @@ export function RockPopupShowcase() {
           </Button>
         </Box>
 
-        <Box>
+        <Box className="rock-popup-showcase__confirm">
           <Typography variant="h6" sx={{ mb: 2 }}>
             Confirm popup
           </Typography>
@@ -58,7 +58,7 @@ export function RockPopupShowcase() {
         title="Basic popup"
         variant="centerPop"
       >
-        <Box sx={{ py: 2 }}>
+        <Box className="rock-popup-showcase__preview-content" sx={{ py: 2 }}>
           <Typography>This is a simple popup preview.</Typography>
         </Box>
       </RockPopup>

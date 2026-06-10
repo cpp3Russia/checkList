@@ -1,8 +1,12 @@
+export type TaskScope = 'daily' | 'master'
+
 export interface ChecklistItem {
   id: string
   title: string
   description?: string
   date: Date
+  reviewOccurrenceDate?: Date
+  sortOrder?: number
   completed: boolean
   inForgetCurve: boolean
   images: string[]
@@ -10,10 +14,22 @@ export interface ChecklistItem {
   category?: string
   project?: string
   tags?: string[]
+  taskScope?: TaskScope
   createdAt: Date
   completedAt?: Date
   completedDurationMs?: number
   forgetCurveData?: ForgetCurveSchedule
+  reviewHistory?: ReviewHistoryEntry[]
+  isReviewInstance?: boolean
+  isReviewHistoryEntry?: boolean
+  reviewSourceItemId?: string
+}
+
+export interface ReviewHistoryEntry {
+  id: string
+  occurrenceDate: Date
+  completedAt: Date
+  completedDurationMs?: number
 }
 
 export interface ForgetCurveSchedule {
