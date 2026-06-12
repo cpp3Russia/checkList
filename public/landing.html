@@ -1,0 +1,769 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>航迹任务台</title>
+    <style>
+      :root {
+        --bg: #f4efe6;
+        --panel: rgba(255, 252, 247, 0.82);
+        --panel-strong: rgba(255, 255, 255, 0.94);
+        --text: #1e2430;
+        --muted: #647084;
+        --line: rgba(44, 61, 88, 0.12);
+        --accent: #0d5bd7;
+        --accent-soft: rgba(13, 91, 215, 0.12);
+        --green: #1e9f67;
+        --shadow: 0 24px 60px rgba(33, 46, 69, 0.12);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html {
+        scroll-behavior: smooth;
+      }
+
+      body {
+        margin: 0;
+        font-family: "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+        color: var(--text);
+        background:
+          radial-gradient(circle at top left, rgba(255, 255, 255, 0.85), transparent 30%),
+          linear-gradient(180deg, #f5efe5 0%, #ecf3fb 48%, #f6f8fc 100%);
+      }
+
+      a {
+        color: inherit;
+        text-decoration: none;
+      }
+
+      .page-shell {
+        width: min(1240px, calc(100vw - 40px));
+        margin: 0 auto;
+      }
+
+      .topbar {
+        position: sticky;
+        top: 0;
+        z-index: 20;
+        backdrop-filter: blur(18px);
+        background: rgba(244, 239, 230, 0.7);
+        border-bottom: 1px solid rgba(44, 61, 88, 0.08);
+      }
+
+      .topbar-inner {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 20px;
+        min-height: 72px;
+      }
+
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+      }
+
+      .brand-badge {
+        width: 42px;
+        height: 42px;
+        border-radius: 14px;
+        background: linear-gradient(135deg, #0d5bd7 0%, #73b6ff 100%);
+        color: #fff;
+        display: grid;
+        place-items: center;
+        font-size: 20px;
+        box-shadow: 0 12px 28px rgba(13, 91, 215, 0.24);
+      }
+
+      .brand-copy h1 {
+        margin: 0;
+        font-size: 18px;
+        font-weight: 700;
+      }
+
+      .brand-copy p {
+        margin: 4px 0 0;
+        color: var(--muted);
+        font-size: 13px;
+      }
+
+      .nav {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+
+      .nav a {
+        padding: 10px 14px;
+        border-radius: 999px;
+        color: var(--muted);
+        font-size: 14px;
+      }
+
+      .nav a:hover {
+        background: rgba(255, 255, 255, 0.72);
+        color: var(--text);
+      }
+
+      .hero {
+        padding: 56px 0 32px;
+      }
+
+      .hero-grid {
+        display: grid;
+        grid-template-columns: 1.05fr 0.95fr;
+        gap: 28px;
+        align-items: center;
+      }
+
+      .eyebrow {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 14px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.75);
+        border: 1px solid rgba(44, 61, 88, 0.08);
+        color: var(--muted);
+        font-size: 13px;
+      }
+
+      .hero h2 {
+        margin: 18px 0 18px;
+        font-size: clamp(38px, 5vw, 72px);
+        line-height: 0.95;
+        letter-spacing: -0.05em;
+      }
+
+      .hero p {
+        margin: 0;
+        max-width: 620px;
+        color: var(--muted);
+        font-size: 18px;
+        line-height: 1.75;
+      }
+
+      .hero-actions {
+        display: flex;
+        gap: 14px;
+        flex-wrap: wrap;
+        margin-top: 28px;
+      }
+
+      .button {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 148px;
+        padding: 14px 22px;
+        border-radius: 999px;
+        font-size: 15px;
+        font-weight: 600;
+        transition: transform 0.25s ease, box-shadow 0.25s ease, background 0.25s ease;
+      }
+
+      .button-primary {
+        color: #fff;
+        background: linear-gradient(135deg, #0d5bd7 0%, #3c8cff 100%);
+        box-shadow: 0 18px 34px rgba(13, 91, 215, 0.26);
+      }
+
+      .button-secondary {
+        color: var(--text);
+        background: rgba(255, 255, 255, 0.8);
+        border: 1px solid rgba(44, 61, 88, 0.1);
+      }
+
+      .button:hover {
+        transform: translateY(-1px);
+      }
+
+      .hero-card {
+        position: relative;
+        padding: 26px;
+        border-radius: 30px;
+        background: linear-gradient(180deg, rgba(255, 255, 255, 0.78) 0%, rgba(255, 255, 255, 0.96) 100%);
+        border: 1px solid rgba(255, 255, 255, 0.9);
+        box-shadow: var(--shadow);
+        overflow: hidden;
+      }
+
+      .hero-card::before {
+        content: "";
+        position: absolute;
+        inset: auto -40px -70px auto;
+        width: 220px;
+        height: 220px;
+        border-radius: 50%;
+        background: radial-gradient(circle, rgba(13, 91, 215, 0.18), transparent 70%);
+      }
+
+      .screen {
+        position: relative;
+        border-radius: 24px;
+        overflow: hidden;
+        background: linear-gradient(180deg, #f8fbff 0%, #eef4ff 100%);
+        border: 1px solid rgba(73, 107, 164, 0.16);
+      }
+
+      .screen-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 16px 18px;
+        border-bottom: 1px solid rgba(73, 107, 164, 0.12);
+      }
+
+      .screen-dots {
+        display: flex;
+        gap: 8px;
+      }
+
+      .screen-dots span {
+        width: 9px;
+        height: 9px;
+        border-radius: 50%;
+        background: #cfd8e7;
+      }
+
+      .screen-body {
+        display: grid;
+        grid-template-columns: 0.9fr 1.1fr;
+        gap: 16px;
+        padding: 18px;
+      }
+
+      .mini-list,
+      .mini-panel,
+      .metric,
+      .feature-card,
+      .story-card,
+      .cta-card {
+        background: var(--panel);
+        border: 1px solid rgba(44, 61, 88, 0.08);
+        backdrop-filter: blur(12px);
+      }
+
+      .mini-list {
+        padding: 16px;
+        border-radius: 20px;
+      }
+
+      .mini-task {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 12px 0;
+        border-bottom: 1px solid rgba(44, 61, 88, 0.07);
+      }
+
+      .mini-task:last-child {
+        border-bottom: 0;
+        padding-bottom: 0;
+      }
+
+      .mini-check {
+        width: 18px;
+        height: 18px;
+        border-radius: 50%;
+        border: 2px solid #a8b6ce;
+      }
+
+      .mini-check.done {
+        background: var(--green);
+        border-color: var(--green);
+      }
+
+      .mini-panel {
+        padding: 16px;
+        border-radius: 22px;
+      }
+
+      .altitude-card {
+        border-radius: 18px;
+        padding: 18px;
+        background: linear-gradient(180deg, #dcecff 0%, #c8e0ff 42%, #9fd5cf 42%, #7fb99e 100%);
+        position: relative;
+        min-height: 258px;
+        overflow: hidden;
+      }
+
+      .altitude-grid {
+        position: absolute;
+        inset: 0;
+        background:
+          linear-gradient(90deg, rgba(255, 255, 255, 0.22) 1px, transparent 1px),
+          linear-gradient(rgba(255, 255, 255, 0.2) 1px, transparent 1px);
+        background-size: 36px 36px;
+      }
+
+      .altitude-line {
+        position: absolute;
+        left: 58px;
+        top: 28px;
+        bottom: 28px;
+        width: 2px;
+        background: rgba(17, 95, 207, 0.22);
+      }
+
+      .altitude-mark {
+        position: absolute;
+        left: 46px;
+        right: 18px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        color: #345372;
+        font-size: 12px;
+      }
+
+      .altitude-mark span:first-child {
+        width: 10px;
+        height: 1px;
+        background: rgba(17, 95, 207, 0.28);
+      }
+
+      .plane {
+        position: absolute;
+        left: 48px;
+        top: 36%;
+        display: flex;
+        align-items: center;
+        gap: 14px;
+      }
+
+      .plane-badge {
+        width: 26px;
+        height: 26px;
+        border-radius: 50%;
+        background: #115fcf;
+        color: #fff;
+        display: grid;
+        place-items: center;
+        box-shadow: 0 10px 18px rgba(17, 95, 207, 0.2);
+      }
+
+      .plane-note {
+        padding: 10px 12px;
+        border-radius: 14px;
+        background: rgba(255, 255, 255, 0.94);
+        box-shadow: 0 10px 24px rgba(68, 101, 161, 0.14);
+      }
+
+      .plane-note strong,
+      .mini-panel strong,
+      .metric strong,
+      .feature-card strong,
+      .story-card strong,
+      .cta-card strong {
+        display: block;
+      }
+
+      .hero-metrics {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 14px;
+        margin-top: 16px;
+      }
+
+      .metric {
+        padding: 18px;
+        border-radius: 20px;
+      }
+
+      .metric small {
+        display: block;
+        color: var(--muted);
+        margin-bottom: 10px;
+      }
+
+      .metric strong {
+        font-size: 26px;
+      }
+
+      .section {
+        padding: 26px 0 0;
+      }
+
+      .section-header {
+        display: flex;
+        align-items: end;
+        justify-content: space-between;
+        gap: 16px;
+        margin-bottom: 22px;
+      }
+
+      .section-header h3 {
+        margin: 0;
+        font-size: clamp(28px, 3vw, 44px);
+        letter-spacing: -0.04em;
+      }
+
+      .section-header p {
+        margin: 8px 0 0;
+        color: var(--muted);
+        max-width: 620px;
+        line-height: 1.75;
+      }
+
+      .feature-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 18px;
+      }
+
+      .feature-card {
+        border-radius: 28px;
+        padding: 24px;
+        box-shadow: 0 18px 42px rgba(33, 46, 69, 0.08);
+      }
+
+      .feature-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 16px;
+        display: grid;
+        place-items: center;
+        margin-bottom: 18px;
+        background: var(--accent-soft);
+        color: var(--accent);
+        font-size: 20px;
+      }
+
+      .feature-card p,
+      .story-card p,
+      .cta-card p {
+        margin: 10px 0 0;
+        color: var(--muted);
+        line-height: 1.75;
+      }
+
+      .story-grid {
+        display: grid;
+        grid-template-columns: 1.15fr 0.85fr;
+        gap: 18px;
+      }
+
+      .story-card,
+      .cta-card {
+        border-radius: 30px;
+        padding: 26px;
+        box-shadow: 0 18px 42px rgba(33, 46, 69, 0.08);
+      }
+
+      .timeline {
+        margin-top: 20px;
+        display: grid;
+        gap: 12px;
+      }
+
+      .timeline-item {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        padding: 14px 16px;
+        border-radius: 18px;
+        background: rgba(255, 255, 255, 0.68);
+        border: 1px solid rgba(44, 61, 88, 0.06);
+      }
+
+      .timeline-dot {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        background: #c9d4e6;
+      }
+
+      .timeline-dot.active {
+        background: var(--accent);
+        box-shadow: 0 0 0 8px rgba(13, 91, 215, 0.1);
+      }
+
+      .timeline-dot.done {
+        background: var(--green);
+      }
+
+      .cta-card {
+        margin: 28px 0 48px;
+        background:
+          radial-gradient(circle at right top, rgba(13, 91, 215, 0.16), transparent 30%),
+          linear-gradient(180deg, rgba(255, 255, 255, 0.88), rgba(255, 255, 255, 0.98));
+      }
+
+      .footer {
+        padding: 0 0 44px;
+        color: var(--muted);
+        font-size: 14px;
+      }
+
+      @media (max-width: 1080px) {
+        .hero-grid,
+        .story-grid,
+        .feature-grid,
+        .screen-body,
+        .hero-metrics {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      @media (max-width: 720px) {
+        .page-shell {
+          width: min(100vw - 28px, 1240px);
+        }
+
+        .topbar-inner,
+        .section-header {
+          align-items: start;
+          flex-direction: column;
+        }
+
+        .hero {
+          padding-top: 36px;
+        }
+
+        .hero-card,
+        .feature-card,
+        .story-card,
+        .cta-card {
+          border-radius: 24px;
+        }
+
+        .nav {
+          width: 100%;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="page-shell topbar-inner">
+        <div class="brand">
+          <div class="brand-badge">✈</div>
+          <div class="brand-copy">
+            <h1>航迹任务台</h1>
+            <p>把任务专注、航班陪伴和进度统计放进同一个工作界面</p>
+          </div>
+        </div>
+        <nav class="nav">
+          <a href="#overview">总览</a>
+          <a href="#features">亮点</a>
+          <a href="#workflow">体验</a>
+          <a href="#launch">开始使用</a>
+        </nav>
+      </div>
+    </header>
+
+    <main class="page-shell">
+      <section class="hero" id="overview">
+        <div class="hero-grid">
+          <div>
+            <div class="eyebrow">专注任务清单 · 航班陪伴视图 · 数据统计页面</div>
+            <h2>一个页面里，<br />把今天推进下去。</h2>
+            <p>
+              航迹任务台把计时、任务处理、飞行状态感知和复盘统计整合到一个轻量工作台里。它不是普通待办清单，
+              更像一个有节奏、有反馈、也有陪伴感的任务界面。
+            </p>
+            <div class="hero-actions">
+              <a class="button button-primary" href="#launch">查看页面结构</a>
+              <a class="button button-secondary" href="#features">了解核心能力</a>
+            </div>
+          </div>
+
+          <div class="hero-card">
+            <div class="screen">
+              <div class="screen-head">
+                <div class="screen-dots">
+                  <span></span>
+                  <span></span>
+                  <span></span>
+                </div>
+                <small style="color: var(--muted)">单屏布局 / 任务 + 航班 + 统计</small>
+              </div>
+              <div class="screen-body">
+                <div class="mini-list">
+                  <strong style="font-size: 16px">今日任务</strong>
+                  <div class="mini-task">
+                    <div class="mini-check done"></div>
+                    <div>
+                      <strong style="font-size: 14px">优化航班模块</strong>
+                      <small style="color: var(--muted)">已完成</small>
+                    </div>
+                  </div>
+                  <div class="mini-task">
+                    <div class="mini-check"></div>
+                    <div>
+                      <strong style="font-size: 14px">补充统计页</strong>
+                      <small style="color: var(--muted)">进行中</small>
+                    </div>
+                  </div>
+                  <div class="mini-task">
+                    <div class="mini-check"></div>
+                    <div>
+                      <strong style="font-size: 14px">上线官网介绍页</strong>
+                      <small style="color: var(--muted)">等待发布</small>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="mini-panel">
+                  <div class="altitude-card">
+                    <div class="altitude-grid"></div>
+                    <div class="altitude-line"></div>
+
+                    <div class="altitude-mark" style="top: 20%">
+                      <span></span>
+                      <span>40,000 英尺</span>
+                    </div>
+                    <div class="altitude-mark" style="top: 36%">
+                      <span></span>
+                      <span>30,000 英尺</span>
+                    </div>
+                    <div class="altitude-mark" style="top: 52%">
+                      <span></span>
+                      <span>20,000 英尺</span>
+                    </div>
+                    <div class="altitude-mark" style="top: 68%">
+                      <span></span>
+                      <span>10,000 英尺</span>
+                    </div>
+                    <div class="altitude-mark" style="top: 84%">
+                      <span></span>
+                      <span>地面</span>
+                    </div>
+
+                    <div class="plane">
+                      <div class="plane-badge">✈</div>
+                      <div class="plane-note">
+                        <small style="display: block; color: var(--muted)">当前高度</small>
+                        <strong>31,800 英尺</strong>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="hero-metrics">
+                    <div class="metric">
+                      <small>本周完成</small>
+                      <strong>27</strong>
+                    </div>
+                    <div class="metric">
+                      <small>完成率</small>
+                      <strong>84%</strong>
+                    </div>
+                    <div class="metric">
+                      <small>专注时长</small>
+                      <strong>18h</strong>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section" id="features">
+        <div class="section-header">
+          <div>
+            <h3>不是把信息塞满，而是把节奏做顺。</h3>
+            <p>
+              页面核心围绕一个问题展开：用户打开后，能不能立刻进入状态。所有设计都围绕清晰、反馈和沉浸感展开。
+            </p>
+          </div>
+        </div>
+
+        <div class="feature-grid">
+          <article class="feature-card">
+            <div class="feature-icon">①</div>
+            <strong>任务主视图</strong>
+            <p>单屏高度内处理任务清单，超出部分内部滚动，不把注意力拖出当前工作区域。</p>
+          </article>
+
+          <article class="feature-card">
+            <div class="feature-icon">②</div>
+            <strong>航班陪伴模块</strong>
+            <p>把真实在航数据和近两小时内待起飞航班混合展示，让页面既有动态感，也有轻度信息娱乐性。</p>
+          </article>
+
+          <article class="feature-card">
+            <div class="feature-icon">③</div>
+            <strong>统计复盘页面</strong>
+            <p>完成率、过去一周完成任务数、复习进度等内容拆到独立页面展示，避免主工作台过载。</p>
+          </article>
+        </div>
+      </section>
+
+      <section class="section" id="workflow">
+        <div class="story-grid">
+          <article class="story-card">
+            <strong style="font-size: 26px">像官网一样讲清楚产品，但保留真实使用感。</strong>
+            <p>
+              这个落地页刻意没有做成传统工具站模板，而是更接近产品叙事页。既能介绍功能，也能让人快速感受到这个页面的氛围和重点。
+            </p>
+
+            <div class="timeline">
+              <div class="timeline-item">
+                <div class="timeline-dot done"></div>
+                <div>
+                  <strong style="font-size: 15px">09:40 开始值机</strong>
+                  <small style="color: var(--muted)">任务进入第一段专注期，右侧实时反馈同步开始工作。</small>
+                </div>
+              </div>
+              <div class="timeline-item">
+                <div class="timeline-dot active"></div>
+                <div>
+                  <strong style="font-size: 15px">10:10 进入巡航</strong>
+                  <small style="color: var(--muted)">页面通过高度视图和阶段提示制造持续推进感。</small>
+                </div>
+              </div>
+              <div class="timeline-item">
+                <div class="timeline-dot"></div>
+                <div>
+                  <strong style="font-size: 15px">11:35 完成复盘</strong>
+                  <small style="color: var(--muted)">切换到统计页，看本周完成数、完成率和复习阶段进展。</small>
+                </div>
+              </div>
+            </div>
+          </article>
+
+          <article class="story-card">
+            <strong style="font-size: 22px">适合继续扩展</strong>
+            <p>这个静态页后面可以直接接成正式官网，也可以继续补上下载区、版本更新、团队介绍和常见问题。</p>
+
+            <div class="metric" style="margin-top: 18px; background: var(--panel-strong)">
+              <small>当前页面方向</small>
+              <strong>专注效率 + 航班信息 + 情绪陪伴</strong>
+            </div>
+
+            <div class="metric" style="margin-top: 14px; background: var(--panel-strong)">
+              <small>适合的下一步</small>
+              <strong>接正式官网导航和部署入口</strong>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <section class="section" id="launch">
+        <article class="cta-card">
+          <strong style="font-size: clamp(28px, 3vw, 40px)">这已经是一张可以直接演示的官网页。</strong>
+          <p>
+            现在它是纯静态 HTML，方便你先确认视觉和文案方向。确定之后，我们可以继续把它接进 React 路由、补上真实截图、增加下载入口，或者直接做成对外展示站点。
+          </p>
+          <div class="hero-actions" style="margin-top: 24px">
+            <a class="button button-primary" href="/">返回应用首页</a>
+            <a class="button button-secondary" href="#overview">回到顶部</a>
+          </div>
+        </article>
+      </section>
+    </main>
+
+    <footer class="page-shell footer">
+      航迹任务台 · 静态官网演示页 · 纯 HTML 版本
+    </footer>
+  </body>
+</html>

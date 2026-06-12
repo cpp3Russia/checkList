@@ -1,0 +1,22 @@
+@use 'sass:math';
+@use './variables' as *;
+
+@function parseInt($n) {
+  // 如果输入不是数字或 0，直接返回
+  @if type-of($n) == number {
+    @if unitless($n) {
+      @return $n;
+    } @else {
+      @return math.div($n, 1px);
+    }
+  }
+  @return 0;
+}
+
+@function px2vw($px) {
+  @return math.div(parseInt($px), $ui-width) * 100vw;
+}
+
+@function px2vh($px) {
+  @return math.div(parseInt($px), $ui-height) * 100vh;
+}
